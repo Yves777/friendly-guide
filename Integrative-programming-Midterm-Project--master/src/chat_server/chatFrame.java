@@ -230,9 +230,8 @@ public class chatFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(b_disconnect)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(Online)
-                                .addGap(0, 0, Short.MAX_VALUE))))
+                            .addComponent(Online))
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -269,12 +268,13 @@ public class chatFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(b_disconnect)))
                 .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lb_port)
-                    .addComponent(tf_port, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(lb_address)
-                        .addComponent(tf_address, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(tf_address, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(lb_port)
+                        .addComponent(tf_port, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(18, 18, Short.MAX_VALUE)
                 .addComponent(b_users)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -306,54 +306,42 @@ public class chatFrame extends javax.swing.JFrame {
 
         String user1 = f_username.getText();
         String pwd = f_password.getText();
+        if (isConnected == false) {
+            port = tf_port.getText();
+            int inputport = Integer.parseInt(port);
+            f_username.setEditable(false);
+            String add = tf_address.getText();
 
-        try (Connection conn = (Connection) DriverManager.getConnection(dbURL, username1, password1)) {
+            try (Connection conn = (Connection) DriverManager.getConnection(dbURL, username1, password1)) {
+                String sql = "SELECT username, password FROM users.signup";
+                Statement statement = conn.createStatement();
+                ResultSet result = statement.executeQuery(sql);
 
-            String sql = "SELECT username, password, firstname FROM users.signup";
-            Statement statement = conn.createStatement();
-            ResultSet result = statement.executeQuery(sql);
+                while (result.next()) {
+                    String username = result.getString("username");
+                    String password = result.getString("password");
 
-            while (result.next()) {
-                String username = result.getString("username");
-                String password = result.getString("password");
-                String name = result.getString("firstname");
-
-                if (user1.equals(username) && pwd.equals(password)) {
-                    JOptionPane.showMessageDialog(null, "Connected");
-                } else if (!user1.equals(username) && !pwd.equals(password)) {
-
-                }
-
-                if (isConnected == false) {
-                    username = name;
-                    port = tf_port.getText();
-                    int inputport = Integer.parseInt(port);
-                    f_username.setEditable(false);
-                    String add = tf_address.getText();
-
-                    try {
+                    if (user1.equals(username) && pwd.equals(password)) {
                         sock = new Socket(add, inputport);
                         InputStreamReader streamreader = new InputStreamReader(sock.getInputStream());
                         reader = new BufferedReader(streamreader);
                         writer = new PrintWriter(sock.getOutputStream());
-                        writer.println(name + ":has connected.:Connect");
+                        writer.println(user1 + ":has connected.:Connect");
                         writer.flush();
                         isConnected = true;
-                    } catch (Exception ex) {
-                        ta_chat.append("Cannot Connect! Try Again. \n");
-                        f_username.setEditable(true);
+                        JOptionPane.showMessageDialog(null, "Connected");
                     }
 
                     ListenThread();
 
-                } else if (isConnected == true) {
-                    ta_chat.append("You are already connected. \n");
                 }
 
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
 
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+        } else if (isConnected == true) {
+            ta_chat.append("You are already connected. \n");
         }
 
     }//GEN-LAST:event_OnlineActionPerformed
